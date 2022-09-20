@@ -1,40 +1,39 @@
 from imageai.Detection import ObjectDetection
-import PIL.Image
+import os
+
+imgOutput = "image_output.jpg"
+
+def get_img_src(src):
+    return src
 
 
-imgSrc = "data/myImageData/img5.jpg"
+def config_remote_detection(img, probability):
+    obj_detect = ObjectDetection()
+    obj_detect.setModelTypeAsYOLOv3()
 
-obj_detect  = ObjectDetection()
-obj_detect.setModelTypeAsYOLOv3()
+    obj_detect.setModelPath("yolo.h5")
+    obj_detect.loadModel()
 
+    obj_detect.CustomObjects(remote=True)
 
-obj_detect.setModelPath("yolo.h5")
-obj_detect.loadModel()
-
-
-obj_detect.CustomObjects(remote=True)
-
-
-detected_obj = obj_detect.detectObjectsFromImage(
-    input_image=imgSrc,
-    output_image_path="test_image_output.jpg",
-    minimum_percentage_probability=20,
-    
-)
+    detected_obj = obj_detect.detectObjectsFromImage(
+        input_image=get_img_src(img),
+        output_image_path=imgOutput,
+        minimum_percentage_probability=probability,
+    )
+    os.remove(imgOutput)
+    os.remove(img)
+    return detected_obj
 
 
-for obj in detected_obj:
-    if obj["name"] == "remote":
-        print("Remote Control Detected !\n")
-        print(obj["percentage_probability"])
-        print(obj["box_points"])
-        outputImgOpen =  PIL.Image.open(imgSrc)
-        croppedImg = outputImgOpen.crop((obj["box_points"]))
-        croppedImg.save("test_image_output.jpg")        
-        
+def find_remote(img, probability):
+    remote_detected = config_remote_detection(img, probability)
+    for obj in remote_detected:
+        if obj["name"] == "remote":
+            return 1
+        else:
+            return 0
 
-    else:
-        print("We Can't Find Remote Try Again !")
 
-im = PIL.Image.open("test_image_output.jpg")
-im.show()
+# im = PIL.Image.open("test_image_output.jpg")
+# im.show()
